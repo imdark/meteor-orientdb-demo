@@ -3,7 +3,7 @@ var orientdb = new Meteor.LiveOrientDB({
   host: 'localhost',
   port: '2424',
   username: 'root',
-  password: '123456',
+  password: '12123333',
   database: 'players'
 });
 

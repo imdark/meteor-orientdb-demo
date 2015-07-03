@@ -1,4 +1,4 @@
-var Oriento = Meteor.npmRequire('oriento');
+var Oriento = Meteor.npmRequire('orientjs');
 
 Meteor.LiveOrientDB = LiveOrientDB;
 
