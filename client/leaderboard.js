@@ -1,20 +1,20 @@
 Meteor.methods({
   'incScore': function(id, amount){
     var originalIndex;
-    players.forEach(function(player, index){
+    oplayers.forEach(function(player, index){
       if(player.id === id){
         originalIndex = index;
-        players[index].score += amount;
-        players.changed();
+        oplayers[index].score += amount;
+        oplayers.changed();
       }
     });
 
     // Reverse changes if needed (due to resorting) on update
-    players.addEventListener('update.incScoreStub', function(index, msg){
+    oplayers.addEventListener('update.incScoreStub', function(index, msg){
       if(originalIndex !== index){
-        players[originalIndex].score -= amount;
+        oplayers[originalIndex].score -= amount;
       }
-      players.removeEventListener('update.incScoreStub');
+      oplayers.removeEventListener('update.incScoreStub');
     });
   }
 });
@@ -26,8 +26,8 @@ Template.leaderboard.helpers({
     return oplayers.reactive();
   },
   selectedName: function () {
-    players.depend();
-    var player = players.filter(function(player){
+    oplayers.depend();
+    var player = oplayers.filter(function(player){
       return player.id === Session.get("selectedPlayer");
     });
     return player.length && player[0].name;

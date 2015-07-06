@@ -37,17 +37,16 @@ function LiveOrientoSelect(sql, options, base) {
   self.laseUpdate = 0;
   self.query = [sql, options]; // I don't know how to write the method, but I think query is just a text for distinguishing each other.
   self.data = [];
-
-
-
-  if(self.query in base._resultsBuffer){
-    setTimeout(function() {
+  // if(self.query in base._resultsBuffer) {
+  //   console.log(self.data)
+    // self._setRecords(base._resultsBuffer[self.query]);
+  // } else {
+    self.runFirstQuery(function() {
       self._setRecords(base._resultsBuffer[self.query]);
-    }, 1);
-
-  } else {
-    self.update();
-  }
+      console.log('self.startLiveQuery()')
+      self.startLiveQuery()
+    });
+  // }
 }
 
 util.inherits(LiveOrientoSelect, EventEmitter);
@@ -66,10 +65,9 @@ LiveOrientoSelect.prototype.matchRecordChange = function(changes){
   var self = this;
   if(changes._boundTo.name == self.base.db.name && 'play' == self.table ){
     return true;
-  }else {
+  } else {
     return false;
   }
-
 };
 
 /*
@@ -87,12 +85,8 @@ LiveOrientoSelect.prototype._setRecords = function(records) {
   self.emit('update', records);
 
   if(!self.base.settings.skipDiff) {
-    var diff = [];
     var diffEvent = function(){
       self.emit.apply(self, arguments);
-
-      diff.push(Array.prototype.slice.call(arguments));
-
     }
 
     records.forEach(function(record, index) {
@@ -121,62 +115,57 @@ LiveOrientoSelect.prototype._setRecords = function(records) {
 };
 
 
-function startLiveQuery(query) {
-self.base.db.liveQuery("LIVE select from players")
-  .on('live-insert', function(data) {
-   //new record inserted in the database,
-   var newRecord = data.content;
-   diffEvent('added', newRecord);
-  })
-  .on('live-delete', function(data) {
-    //record just deleted, receiving the old content
-    var myRecord = data.content;
-    diffEvent('removed', myRecord);
-  })
-  .on('live-update', function(data){
-    //record updated, receiving the new content
-    var myRecord = data.content;
-    diffEvent('changed', myRecord);
-  });
+LiveOrientoSelect.prototype.startLiveQuery = function(query) {
+  var self = this;
+  self.base.db.liveQuery("LIVE select from players")
+    .on('live-insert', function(data) {
+    console.log(arguments)
+     
+     //new record inserted in the database,
+     var newRecord = data.content;
+     self.data.push(newRecord);
+     self.emit('added', newRecord, self.data.length - 1);
+    })
+    .on('live-delete', function(data) {
+      //record just deleted, receiving the old content
+      var removedRecord = data.content;
+      var oldRecord = self.data.filter(function(record) {return record.rid == removedRecord.rid} )[0]
+      var oldIndex = self.data.indexOf(oldRecord);
+
+      self.emit('removed', oldRecord, oldIndex);
+    })
+    .on('live-update', function(data){
+      //record updated, receiving the new content
+      var updatedRecord = data.content;
+      var oldRecord = self.data.filter(function(record) {return record.rid == updatedRecord.rid} )[0]
+      var oldIndex = self.data.indexOf(oldRecord);
+      self.data[oldIndex] = updatedRecord;
+      
+      self.emit('changed', oldRecord, updatedRecord, oldIndex);
+    });
 }
 
 
 /*
  *
  * @method
- * @name update
+ * @name runFirstQuery
  * @description :
  *   1. we do select in this method;
  *   2. then if no error, we save the data of the query and results in _resultsBuffer which means update;
  *   3. and set latest records into self.data;
  *
  */
-LiveOrientoSelect.prototype.update = function(callback){
+LiveOrientoSelect.prototype.runFirstQuery = function(callback) {
   var self = this;
-  function _update() {
-    // records should be the results of this select, where do the records come from ?
-    self.base.db.exec(self.sql, self.options).then(function(response){
-      var records = response.results[0].content;
+  
+  self.base.db.exec(self.sql, self.options).then(function(response){
+    var records = response.results[0].content;
 
-      self.base._resultsBuffer[self.query] = records;
-      self._setRecords(records);
-      callback && callback.call(self, undefined, records);;
-    });
-  }
-
-  // Generally we do not setup minInterval, Why do we have other choices?
-  if(self.base.settings.minInterval === undefined){
-    _update();
-  } else if(self.lastUpdate + self.base.settings.minInterval < Date.now()){
-    _update();
-  } else { // Before minInterval
-    if(!self._updateTimeout){
-      self._updateTimeout = setTimeout(function(){
-        delete self._updateTimeout;
-        _update();
-      }, self.lastUpdate + self.base.settings.minInterval - Date.now());
-    }
-  }
+    self.base._resultsBuffer[self.query] = records;
+    self._setRecords(records);
+    callback && callback.call(self, undefined, records);;
+  });
 };
 
 /*
@@ -243,19 +232,19 @@ LiveOrientoSelect.prototype._publishCursor = function(sub) {
   });
 
   eventEmitter.on('update', function(records){
-    console.log(records)
     if(sub._ready === false){
       initLength = records.length;
       if(initLength === 0) sub.ready();
     }
   });
 
-  eventEmitter.on('added', function(row, records) {
+  eventEmitter.on('added', function(record, index) {
+    console.log(arguments)
     sub._session.send({
       msg: 'added',
       collection: sub._name,
-      id: sub._subscriptionId + ':' + records,
-      fields: row
+      id: sub._subscriptionId + ':' + index,
+      fields: record
     });
     
     if(sub._ready === false &&
@@ -264,16 +253,16 @@ LiveOrientoSelect.prototype._publishCursor = function(sub) {
     }      
   });
 
-  self.on('changed', function(row, records, index) {
+  eventEmitter.on('changed', function(oldRecord, newRecord, index) {
     sub._session.send({
       msg: 'changed',
       collection: sub._name,
       id: sub._subscriptionId + ':' + index,
-      fields: records
+      fields: newRecord
     });
   });
 
-  self.on('removed', function(row, records, index) {
+  eventEmitter.on('removed', function(row, records, index) {
     sub._session.send({
       msg: 'removed',
       collection: sub._name,
