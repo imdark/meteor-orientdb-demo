@@ -9,7 +9,7 @@ var orientdb = new Meteor.LiveOrientDB({
 
 Meteor.publish('test', function() {
   return orientdb.select(
-    'select * from players', {params:{table:"player"}}
+    'select from players order by score desc', { params: { table: "player" } }
   );
 });
 

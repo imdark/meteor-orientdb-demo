@@ -16,9 +16,7 @@ Meteor.LiveOrientDB.LiveOrientoSelect = LiveOrientoSelect;
  *
  *
  */
-
-
-function LiveOrientoSelect(sql, options, base){
+function LiveOrientoSelect(sql, options, base) {
 
   if(!sql)
     throw new Error('sql required');
@@ -43,38 +41,16 @@ function LiveOrientoSelect(sql, options, base){
 
 
   if(self.query in base._resultsBuffer){
-    setTimeout(function(){
+    setTimeout(function() {
       self._setRecords(base._resultsBuffer[self.query]);
     }, 1);
 
-  }else{
+  } else {
     self.update();
   }
 }
 
 util.inherits(LiveOrientoSelect, EventEmitter);
-
-
-/*
- *
- * @method
- * @name _mapParameters
- * @description :
- *   1. replace every :name in sql by value of :name in params
- *
- */
-
-
-//LiveOrientoSelect.prototype._mapParameters = function(sql, options){
-//  var self = this;
-//  _.forEach(options.params, funtion(value, key){
-//    value = (!isNaN(value)) ? value : '"' + value + '"';
-//    query = query.replace('{' + key + '}', value).replace('{ ' + key + ' }', value);
-//  })
-//
-//  return query;
-//};
-
 
 /*
  *
@@ -86,8 +62,6 @@ util.inherits(LiveOrientoSelect, EventEmitter);
  *   3. make sure whether the changes affect the select instance in _select;
  *
  */
-
-
 LiveOrientoSelect.prototype.matchRecordChange = function(changes){
   var self = this;
   if(changes._boundTo.name == self.base.db.name && 'play' == self.table ){
@@ -95,7 +69,6 @@ LiveOrientoSelect.prototype.matchRecordChange = function(changes){
   }else {
     return false;
   }
-
 
 };
 
@@ -109,13 +82,11 @@ LiveOrientoSelect.prototype.matchRecordChange = function(changes){
  *   3. we emit every event to ?;
  *
  */
-
-
-LiveOrientoSelect.prototype._setRecords = function(records){
+LiveOrientoSelect.prototype._setRecords = function(records) {
   var self = this;
   self.emit('update', records);
 
-  if(!self.base.settings.skipDiff){
+  if(!self.base.settings.skipDiff) {
     var diff = [];
     var diffEvent = function(){
       self.emit.apply(self, arguments);
@@ -124,34 +95,50 @@ LiveOrientoSelect.prototype._setRecords = function(records){
 
     }
 
-    records.forEach(function(record, index){
+    records.forEach(function(record, index) {
       if(self.data.length - 1 < index){
         diffEvent('added', record.value, index);
 
         self.data[index] = record.value;
 
 
-      }else if(JSON.stringify(self.data[index]) !== JSON.stringify(record)){
-
+      } else if(JSON.stringify(self.data[index]) !== JSON.stringify(record)) {
         diffEvent('changed', self.data[index], record.value, index);
         self.data[index] = record.value;
-
       }
     });
-    if(self.data.length > records.length){
-      for(var i = self.data.length - 1; i >= records.length; i--){
+
+    if(self.data.length > records.length) {
+      for(var i = self.data.length - 1; i >= records.length; i--) {
         diffEvent('removed', self.data[i], i);
 
       }
       self.data.splice(records.length, self.data.length - records.length);
     }
-    if(diff.length !== 0){
-      self.emit('diff', diff);
-    }
   }
 
   self.lastUpdate = Date.now();
 };
+
+
+function startLiveQuery(query) {
+self.base.db.liveQuery("LIVE select from players")
+  .on('live-insert', function(data) {
+   //new record inserted in the database,
+   var newRecord = data.content;
+   diffEvent('added', newRecord);
+  })
+  .on('live-delete', function(data) {
+    //record just deleted, receiving the old content
+    var myRecord = data.content;
+    diffEvent('removed', myRecord);
+  })
+  .on('live-update', function(data){
+    //record updated, receiving the new content
+    var myRecord = data.content;
+    diffEvent('changed', myRecord);
+  });
+}
 
 
 /*
@@ -164,12 +151,10 @@ LiveOrientoSelect.prototype._setRecords = function(records){
  *   3. and set latest records into self.data;
  *
  */
-
-
 LiveOrientoSelect.prototype.update = function(callback){
   var self = this;
-  function _update(){
-    // records should be the results of this selcect, where do the records come from ?
+  function _update() {
+    // records should be the results of this select, where do the records come from ?
     self.base.db.exec(self.sql, self.options).then(function(response){
       var records = response.results[0].content;
 
@@ -182,9 +167,9 @@ LiveOrientoSelect.prototype.update = function(callback){
   // Generally we do not setup minInterval, Why do we have other choices?
   if(self.base.settings.minInterval === undefined){
     _update();
-  }else if(self.lastUpdate + self.base.settings.minInterval < Date.now()){
+  } else if(self.lastUpdate + self.base.settings.minInterval < Date.now()){
     _update();
-  }else{ // Before minInterval
+  } else { // Before minInterval
     if(!self._updateTimeout){
       self._updateTimeout = setTimeout(function(){
         delete self._updateTimeout;
@@ -204,14 +189,13 @@ LiveOrientoSelect.prototype.update = function(callback){
  *   3.
  *
  */
-
 LiveOrientoSelect.prototype.stop = function(){
   var self = this;
   var index = self.base._select.indexOf(self);
   if(index !== -1){
     self.base._select.splice(index, 1);
     return true;
-  }else{
+  } else {
     return false;
   }
 };
@@ -227,8 +211,6 @@ LiveOrientoSelect.prototype.stop = function(){
  *   3.
  *
  */
-
-
 LiveOrientoSelect.prototype.active = function(){
   var self = this;
   return self.base._select.indexOf(self) !== -1;
@@ -240,20 +222,16 @@ LiveOrientoSelect.prototype.active = function(){
  * @method
  * @name _publishCursor
  * @description :
- *   1. it is about publish, but I did not find a place that we called it.
- *   2.
- *   3.
- *
+ *   1. this passes update to the subscribed clients.
+ *   2. it registers each subscriber to the LiveOrientoSelect event emitter
+ *   3. and when an update happens sends every client the new information
  */
-
 LiveOrientoSelect.prototype._publishCursor = function(sub) {
-  var self = this;
+  var eventEmitter = this;
   var initLength;
 
-
-
   sub.onStop(function(){
-    self.stop();
+    eventEmitter.stop();
   });
 
   // Send reset message (for code pushes)
@@ -264,38 +242,42 @@ LiveOrientoSelect.prototype._publishCursor = function(sub) {
     fields: { reset: true }
   });
 
-  self.on('update', function(records){
+  eventEmitter.on('update', function(records){
+    console.log(records)
     if(sub._ready === false){
       initLength = records.length;
       if(initLength === 0) sub.ready();
     }
   });
 
-
-  function selectHandler(eventName, fieldArgument, indexArgument, customAfter){
-
-    // Events from mysql-live-select are the same names as the DDP msg types
-    self.on(eventName, function(/* row, [newRow,] index */){
-
-      sub._session.send({
-        msg: eventName,
-        collection: sub._name,
-        id: sub._subscriptionId + ':' + arguments[indexArgument],
-        fields: fieldArgument !== null ? arguments[fieldArgument] : undefined
-      });
-      if(customAfter) customAfter();
+  eventEmitter.on('added', function(row, records) {
+    sub._session.send({
+      msg: 'added',
+      collection: sub._name,
+      id: sub._subscriptionId + ':' + records,
+      fields: row
     });
-  }
-
-  selectHandler('added', 0, 1, function(){
+    
     if(sub._ready === false &&
-       self.data.length === initLength - 1){
+       eventEmitter.data.length === initLength - 1) {
       sub.ready();
-    }
+    }      
   });
-  selectHandler('changed', 1, 2);
-  selectHandler('removed', null, 1);
-}
 
+  self.on('changed', function(row, records, index) {
+    sub._session.send({
+      msg: 'changed',
+      collection: sub._name,
+      id: sub._subscriptionId + ':' + index,
+      fields: records
+    });
+  });
 
-//module.exports = LiveOrientoSelect;
+  self.on('removed', function(row, records, index) {
+    sub._session.send({
+      msg: 'removed',
+      collection: sub._name,
+      id: sub._subscriptionId + ':' + records,
+    });
+  });
+  }

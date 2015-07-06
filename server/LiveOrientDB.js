@@ -16,7 +16,7 @@ Meteor.LiveOrientDB = LiveOrientDB;
  */
 
 
-function LiveOrientDB(settings, callback){
+function LiveOrientDB(settings, callback) {
   var self = this;
   var server = Oriento(settings);
   var db = server.use(settings.database);
@@ -36,13 +36,12 @@ function LiveOrientDB(settings, callback){
  * @method
  * @name select
  * @description :
- *   1. return an instanc of LiveOrientoSelect;
+ *   1. return an instance of LiveOrientoSelect;
  *   2. keep every select instance in ._select; this makes us known how many select we have.
  *   3. for sql and options, we follow oriento's rule, see them there;
  *   4. options.params.table is the class in the sql clause;
  */
-
-LiveOrientDB.prototype.select = function(sql, options){
+LiveOrientDB.prototype.select = function(sql, options) {
   var self = this;
 
   var newSelect = new Meteor.LiveOrientDB.LiveOrientoSelect(sql, options, this);
@@ -65,7 +64,6 @@ LiveOrientDB.prototype.select = function(sql, options){
  *  5. for sql and options, we follow oriento's rule, see them there;
  *
  */
-
 LiveOrientDB.prototype.execute = function(sql, options){
   var self = this;
   //????? trigger send back  what?
@@ -90,7 +88,7 @@ LiveOrientDB.prototype.execute = function(sql, options){
 
           select._setRecords(eventResults[select.query]);
           _nextSelect(index + 1);
-        }else{
+        } else {
 
 
           select.update(function(error, records){
@@ -100,7 +98,7 @@ LiveOrientDB.prototype.execute = function(sql, options){
             _nextSelect(index + 1);
           });
         }
-      }else{
+      } else {
 
         _nextSelect(index + 1);
       }
