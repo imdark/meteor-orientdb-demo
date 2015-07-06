@@ -10,12 +10,12 @@ Meteor.methods({
     });
 
     // Reverse changes if needed (due to resorting) on update
-    oplayers.addEventListener('update.incScoreStub', function(index, msg){
-      if(originalIndex !== index){
-        oplayers[originalIndex].score -= amount;
-      }
-      oplayers.removeEventListener('update.incScoreStub');
-    });
+    // oplayers.addEventListener('update.incScoreStub', function(index, msg){
+    //   if(originalIndex !== index){
+    //     oplayers[originalIndex].score -= amount;
+    //   }
+    //   oplayers.removeEventListener('update.incScoreStub');
+    // });
   }
 });
 
@@ -28,7 +28,7 @@ Template.leaderboard.helpers({
   selectedName: function () {
     oplayers.depend();
     var player = oplayers.filter(function(player){
-      return player.id === Session.get("selectedPlayer");
+      return player.name === Session.get("selectedPlayer").name;
     });
     return player.length && player[0].name;
   }
@@ -36,20 +36,26 @@ Template.leaderboard.helpers({
 
 Template.leaderboard.events({
   'click .inc': function () {
-    Meteor.call('incScore', Session.get("selectedPlayer"), 5);
+    var player = oplayers.filter(function(player){
+      return player.name === Session.get("selectedPlayer").name;
+    })[0];
+
+    player.score += 5
+    Meteor.call('incScore', {name: player.name, score: player.score});
   }
 });
 
 Template.player.helpers({
   selected: function () {
-    return Session.equals("selectedPlayer", this.id) ? "selected" : '';
+    return Session.equals("selectedPlayer", this) ? "selected" : '';
   }
 });
 
 Template.player.events({
   'click': function () {
+    Session.set("selectedPlayer", this)
     //Meteor.call('incScore');
     //Meteor.call('delScore');
-    Meteor.call('updScore', {params:{score:61}});
+    // Meteor.call('updScore', {params:{score:61}});
   }
 });

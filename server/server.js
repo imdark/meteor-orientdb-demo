@@ -35,14 +35,17 @@ Meteor.publish('test', function() {
 // });
 
 Meteor.methods({
-  'incScore': function(){
-      orientdb.execute('INSERT into players set name=:name, score=:score', {params:{name:'abc', score:100}});
-    },
-  'delScore': function(){
-      orientdb.execute('DELETE vertex from players where name=:name', {params:{name:'abc'}});
-    },
+  'incScore': function(options) {
+    console.log(options)
+      orientdb.execute('update players set score=:score where name=:name', {params:options});
+    }
+  });
+//     },
+//   'delScore': function(){
+//       orientdb.execute('DELETE vertex from players where name=:name', {params:{name:'abc'}});
+//     },
 
-  'updScore': function(options){
-      orientdb.execute('UPDATE #12:1 SET score=:score', options);
-    },
-});
+//   'updScore': function(options){
+//       orientdb.execute('UPDATE #12:1 SET score=:score', options);
+//     },
+// });
