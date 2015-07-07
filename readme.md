@@ -51,7 +51,7 @@ var orientdb = new Meteor.LiveOrientDB({
 * [https://github.com/orientechnologies/orientdb-docs/blob/master/Live-Query.md](documentation explaining the use of live query in orientDB docs)
 
 ## version notes
--7/7/2015- the demo does work fully now and synchronizes scores across multiply sessions using live query.
+-7/7/2015- the demo does work fully now and synchronizes scores across multiple sessions using live query.
 it is very hacky and there are a few limitation in the orient db live query api that will make it nearly impossible to make it truly generic.
 orientdb live query does not return the 'rid' of the row making it necessary to make up my own generic id column (i used names in this case), this might be a bug in orientjs.
 it also does not return updates in the location of the returned record in an ordered query or allow for rownum as a virtual column, making it a must for the client/meteor server sort the data manually after the network boundary.
