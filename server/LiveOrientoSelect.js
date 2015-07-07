@@ -38,7 +38,7 @@ function LiveOrientoSelect(sql, options, base) {
   self.query = [sql, options]; // I don't know how to write the method, but I think query is just a text for distinguishing each other.
   self.data = [];
   if((self.query in base._resultsBuffer)) {
-      self.startLiveQuery()
+      self.startLiveQuery(sql, options)
     }
     self.runFirstQuery(function() {
       self._setRecords(base._resultsBuffer[self.query]);
@@ -57,7 +57,7 @@ util.inherits(LiveOrientoSelect, EventEmitter);
  *   3. make sure whether the changes affect the select instance in _select;
  *
  */
-LiveOrientoSelect.prototype.matchRecordChange = function(changes){
+LiveOrientoSelect.prototype.matchRecordChange = function(changes) {
   var self = this;
   if(changes._boundTo.name == self.base.db.name && 'play' == self.table ){
     return true;
@@ -86,6 +86,8 @@ LiveOrientoSelect.prototype._setRecords = function(records) {
     }
 
     records.forEach(function(record, index) {
+      record['@rid'] = exctractRID(record);
+      
       if(self.data.length - 1 < index){
         diffEvent('added', record.value, index);
 
@@ -110,14 +112,19 @@ LiveOrientoSelect.prototype._setRecords = function(records) {
   self.lastUpdate = Date.now();
 };
 
+function exctractRID(updateData) {
+    return '#' + updateData.cluster + ":" + updateData.position; 
+}
 
 LiveOrientoSelect.prototype.startLiveQuery = function(query) {
   var self = this;
-  self.base.db.liveQuery("LIVE select from players")
+
+  self.base.db.liveQuery("LIVE " + query)
     .on('live-insert', function(data) {
      
      //new record inserted in the database,
      var newRecord = data.content;
+     newRecord['@rid'] = exctractRID(data);
      if(!self.data.some(function(record) {return record.name == newRecord.name})) {
       self.data.push(newRecord);
       self.emit('added', newRecord, self.data.length - 1);
@@ -126,15 +133,17 @@ LiveOrientoSelect.prototype.startLiveQuery = function(query) {
     .on('live-delete', function(data) {
       //record just deleted, receiving the old content
       var removedRecord = data.content;
+      removedRecord['@rid'] = exctractRID(data);
       var oldRecord = self.data.filter(function(record) {return record.name == removedRecord.name} )[0]
       var oldIndex = self.data.indexOf(oldRecord);
 
       self.emit('removed', oldRecord, oldIndex);
     })
     .on('live-update', function(data){
-      console.log('live-update', arguments)
       //record updated, receiving the new content
       var updatedRecord = data.content;
+      updatedRecord['@rid'] = exctractRID(data);
+      
       var oldRecord = self.data.filter(function(record) {return record.name == updatedRecord.name} )[0]
 
       if(JSON.stringify(updatedRecord) !== JSON.stringify(oldRecord)) {
@@ -254,7 +263,6 @@ LiveOrientoSelect.prototype._publishCursor = function(sub) {
   });
 
   eventEmitter.on('changed', function(oldRecord, newRecord, index) {
-    console.log(oldRecord, newRecord, index)
     sub._session.send({
       msg: 'changed',
       collection: sub._name,

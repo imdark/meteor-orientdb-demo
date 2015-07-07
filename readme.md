@@ -51,7 +51,19 @@ var orientdb = new Meteor.LiveOrientDB({
 * [https://github.com/orientechnologies/orientdb-docs/blob/master/Live-Query.md](documentation explaining the use of live query in orientDB docs)
 
 ## version notes
--7/7/2015- the demo does work fully now and synchronizes scores across multiple sessions using live query.
+- 8/7/2015 - it seems most of the connection i have been having are due to a bug in orientjs opend an issue here:
+https://github.com/orientechnologies/orientjs/issues/36
+
+- 7/7/2015 - on that subject of ids: it seems that on rc5, when receiving an updated or new record in a live-query you are passed an object that looks like this:
+{ content: { '@type': 'd', '@class': 'players', name: 'Maxwell', score: 120 }, type: 'd', cluster: 12, position: 41, version: 0 } }
+Iv filled an issue in orient js, since I belive this should not be solved on the application level
+https://github.com/orientechnologies/orientjs/issues/35
+so the rid can be created by joining the cluster and position parameters as described here
+http://orientdb.com/docs/2.0/orientdb.wiki/Tutorial-Record-ID.html
+
+for now I  am solving this in the demo code
+
+- 7/7/2015 - the demo does work fully now and synchronizes scores across multiple sessions using live query.
 it is very hacky and there are a few limitation in the orient db live query api that will make it nearly impossible to make it truly generic.
 orientdb live query does not return the 'rid' of the row making it necessary to make up my own generic id column (i used names in this case), this might be a bug in orientjs.
 it also does not return updates in the location of the returned record in an ordered query or allow for rownum as a virtual column, making it a must for the client/meteor server sort the data manually after the network boundary.
