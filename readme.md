@@ -51,6 +51,8 @@ var orientdb = new Meteor.LiveOrientDB({
 * [https://github.com/orientechnologies/orientdb-docs/blob/master/Live-Query.md](documentation explaining the use of live query in orientDB docs)
 
 ## version notes
+- 17/7/2015 - I believe I have solved the connection issues in orientjs, will be making a pull request.
+For now it is solved in the local package version, from my tests it works perfectly meaning both all the connection issues I have noticed seems to be resolved now, also been cleaning the select code, looks much better now. 
 - 8/7/2015 - it seems most of the connection i have been having are due to a bug in orientjs opend an issue here:
 https://github.com/orientechnologies/orientjs/issues/36
 
@@ -68,3 +70,8 @@ it is very hacky and there are a few limitation in the orient db live query api 
 orientdb live query does not return the 'rid' of the row making it necessary to make up my own generic id column (i used names in this case), this might be a bug in orientjs.
 it also does not return updates in the location of the returned record in an ordered query or allow for rownum as a virtual column, making it a must for the client/meteor server sort the data manually after the network boundary.
 also it only works using the experimental branch of orientdb so production use would not be smart
+
+## ToDo
+need to create a package that installs orient all by itself for deployment
+the mongo db installation that comes with meteor is downloaded into 
+C:\Users\User\AppData\Local\.meteor\packages\meteor-tool\1.1.3\mt-os.windows.x86_32\dev_bundle\mongodb\bin
