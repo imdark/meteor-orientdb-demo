@@ -2,8 +2,6 @@ var Oriento = Meteor.npmRequire('orientjs');
 
 Meteor.LiveOrientDB = LiveOrientDB;
 
-//var LiveOrientoSelect = Meteor.npmRequire('./LiveOrientoSelect');
-
 /*
  *
  * @object
@@ -14,8 +12,6 @@ Meteor.LiveOrientDB = LiveOrientDB;
  *   3. keeps all select instances as keys, all records as values in ._resultsBuffer;
  *
  */
-
-
 function LiveOrientDB(settings, callback) {
   var self = this;
   var server = Oriento(settings);
@@ -28,7 +24,6 @@ function LiveOrientDB(settings, callback) {
   self._resultsBuffer = {};
 
   if(callback) return callback();
-
 }
 
 /*
@@ -64,58 +59,42 @@ LiveOrientDB.prototype.select = function(sql, options) {
  *  5. for sql and options, we follow oriento's rule, see them there;
  *
  */
-LiveOrientDB.prototype.execute = function(sql, options){
+LiveOrientDB.prototype.execute = function(sql, options) {
   var self = this;
-  //????? trigger send back  what?
-  // changes = {
-  //    database: string
-  //    table   : string
-  //    event   : string 'changed', 'added' or 'removed'
-  //    records : array of record
-  // }
   var changes = self.db.exec(sql, options, this);
 
-  //??? Why do we need eventResults here but self._resultsBuffer?
-  //    We never use eventResults else where.
-  var eventResults = {};
-  function _nextSelect(index){
-    var select;
-    if(index < self._select.length){
-      select = self._select[index];
-      if(select.matchRecordChange(changes)){
-        if(select.query in eventResults){
+  // var eventResults = {};
+  
+  // function _nextSelect(index) {
+  //   var select;
+  //   if(index < self._select.length) {
+  //     select = self._select[index];
+  //     if(select.matchRecordChange(changes)){
+  //       if(select.query in eventResults){
 
 
-          select._setRecords(eventResults[select.query]);
-          _nextSelect(index + 1);
-        } else {
+  //         select._setRecords(eventResults[select.query]);
+  //         _nextSelect(index + 1);
+  //       } else {
+  //         select.update(function(error, records) {
+  //           if(error === undefined){
+  //             eventResults[select.query] = records;
+  //           }
+  //           _nextSelect(index + 1);
+  //         });
+  //       }
+  //     } else {
+  //       _nextSelect(index + 1);
+  //     }
+  //   }
+  // };
 
+  // _nextSelect(0);
 
-          select.update(function(error, records){
-            if(error === undefined){
-              eventResults[select.query] = records;
-            }
-            _nextSelect(index + 1);
-          });
-        }
-      } else {
-
-        _nextSelect(index + 1);
-      }
-    }
-  }
-
-  _nextSelect(0);
-
-  return console.log(sql);
+  return console.log('LiveOrientDB.prototype.execute', sql);
 };
 
 LiveOrientDB.prototype.end = function(){
   var self = this;
   self.db.destroy();
 };
-
-// Expose child constructor for prototype enhancements
-//LiveOrientDB.LiveOrientoSelect = LiveOrientoSelect;
-
-//module.exports = LiveOrientDB;

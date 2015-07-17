@@ -1,5 +1,4 @@
 var EventEmitter = Meteor.npmRequire('events').EventEmitter;
-
 var util = Meteor.npmRequire('util');
 
 Meteor.LiveOrientDB.LiveOrientoSelect = LiveOrientoSelect;
@@ -13,11 +12,8 @@ Meteor.LiveOrientDB.LiveOrientoSelect = LiveOrientoSelect;
  *   3. data is
  *   4. table in options.params is the class in sql;
  *   5. we avoid to use word 'class' and declaring the table is to determine whether the changes affect it later;
- *
- *
  */
 function LiveOrientoSelect(sql, options, base) {
-
   if(!sql)
     throw new Error('sql required');
   if(!(options instanceof Object))
@@ -37,11 +33,11 @@ function LiveOrientoSelect(sql, options, base) {
   self.laseUpdate = 0;
   self.query = [sql, options]; // I don't know how to write the method, but I think query is just a text for distinguishing each other.
   self.data = [];
-  if((self.query in base._resultsBuffer)) {
+  // if((self.query in base._resultsBuffer)) {
       self.startLiveQuery(sql, options)
-    }
+    // }
     self.runFirstQuery(function() {
-      self._setRecords(base._resultsBuffer[self.query]);
+      // self._setRecords(base._resultsBuffer[self.query]);
     });
 }
 
@@ -66,8 +62,19 @@ LiveOrientoSelect.prototype.matchRecordChange = function(changes) {
   }
 };
 
+LiveOrientoSelect.prototype._setRecords = function(records) {
+  console.log('_setRecords', records)
+    var self = this;
+    self.data = records.map(function(record){
+      return record.value
+    });
+
+    self.data.forEach(function(value, index) {
+      self.emit('added', value, index);
+    });
+}
+
 /*
- *
  * @method
  * @name _setRecords
  * @description :
@@ -76,41 +83,41 @@ LiveOrientoSelect.prototype.matchRecordChange = function(changes) {
  *   3. we emit every event to ?;
  *
  */
-LiveOrientoSelect.prototype._setRecords = function(records) {
-  var self = this;
-  self.emit('update', records);
+// LiveOrientoSelect.prototype._setRecords = function(records) {
+//   var self = this;
+//   self.emit('update', records);
 
-  if(!self.base.settings.skipDiff) {
-    var diffEvent = function(){
-      self.emit.apply(self, arguments);
-    }
+//   if(!self.base.settings.skipDiff) {
+//     var diffEvent = function(){
+//       self.emit.apply(self, arguments);
+//     }
 
-    records.forEach(function(record, index) {
-      record['@rid'] = exctractRID(record);
+//     records.forEach(function(record, index) {
+//       record['@rid'] = exctractRID(record);
       
-      if(self.data.length - 1 < index){
-        diffEvent('added', record.value, index);
+//       if(self.data.length - 1 < index){
+//         diffEvent('added', record.value, index);
 
-        self.data[index] = record.value;
+//         self.data[index] = record.value;
 
 
-      } else if(JSON.stringify(self.data[index]) !== JSON.stringify(record)) {
-        diffEvent('changed', self.data[index], record.value, index);
-        self.data[index] = record.value;
-      }
-    });
+//       } else if(JSON.stringify(self.data[index]) !== JSON.stringify(record)) {
+//         diffEvent('changed', self.data[index], record.value, index);
+//         self.data[index] = record.value;
+//       }
+//     });
 
-    if(self.data.length > records.length) {
-      for(var i = self.data.length - 1; i >= records.length; i--) {
-        diffEvent('removed', self.data[i], i);
+//     if(self.data.length > records.length) {
+//       for(var i = self.data.length - 1; i >= records.length; i--) {
+//         diffEvent('removed', self.data[i], i);
 
-      }
-      self.data.splice(records.length, self.data.length - records.length);
-    }
-  }
+//       }
+//       self.data.splice(records.length, self.data.length - records.length);
+//     }
+//   }
 
-  self.lastUpdate = Date.now();
-};
+//   self.lastUpdate = Date.now();
+// };
 
 function exctractRID(updateData) {
     return '#' + updateData.cluster + ":" + updateData.position; 
@@ -139,11 +146,10 @@ LiveOrientoSelect.prototype.startLiveQuery = function(query) {
 
       self.emit('removed', oldRecord, oldIndex);
     })
-    .on('live-update', function(data){
+    .on('live-update', function(data) {
       //record updated, receiving the new content
       var updatedRecord = data.content;
       updatedRecord['@rid'] = exctractRID(data);
-      
       var oldRecord = self.data.filter(function(record) {return record.name == updatedRecord.name} )[0]
 
       if(JSON.stringify(updatedRecord) !== JSON.stringify(oldRecord)) {
@@ -169,10 +175,9 @@ LiveOrientoSelect.prototype.startLiveQuery = function(query) {
 LiveOrientoSelect.prototype.runFirstQuery = function(callback) {
   var self = this;
   
-  self.base.db.exec(self.sql, self.options).then(function(response){
+  self.base.db.exec(self.sql, self.options).then(function(response) {
     var records = response.results[0].content;
-
-    self.base._resultsBuffer[self.query] = records;
+    console.log('.runFirstQuery', response);
     self._setRecords(records);
     callback && callback.call(self, undefined, records);;
   });
@@ -210,7 +215,7 @@ LiveOrientoSelect.prototype.stop = function(){
  *   3.
  *
  */
-LiveOrientoSelect.prototype.active = function(){
+LiveOrientoSelect.prototype.active = function() {
   var self = this;
   return self.base._select.indexOf(self) !== -1;
 };

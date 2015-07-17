@@ -36,7 +36,7 @@ Meteor.publish('test', function() {
 
 Meteor.methods({
   'incScore': function(options) {
-    console.log(options)
+    console.trace(options)
       orientdb.execute('update players set score=:score where name=:name', {params:options});
     }
   });
