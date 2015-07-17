@@ -13,30 +13,9 @@ Meteor.publish('test', function() {
   );
 });
 
-// Meteor.publish('allPlayers', function(){
-//   return orientdb.select(
-//     'SELECT * FROM players ORDER BY score DESC',
-//     {params:{ table: 'player' } }
-//   );
-// });
-
-// Meteor.publish('playerScore', function(name){
-//   return orientdb.select(
-//     'SELECT id, score FROM players WHERE name = ' + liveDb.db.escape(name),
-//     [
-//       {
-//         table: 'players',
-//         condition: function(row, newRow){
-//           return row.name === name;
-//         }
-//       }
-//     ]
-//   );
-// });
-
 Meteor.methods({
   'incScore': function(options) {
-      orientdb.execute('update players set score=:score where name=:name', {params:options});
+      orientdb.execute('update players set score=:score where name=:name', { params:options });
     }
   });
 //     },

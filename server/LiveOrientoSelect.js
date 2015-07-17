@@ -33,12 +33,8 @@ function LiveOrientoSelect(sql, options, base) {
   self.laseUpdate = 0;
   self.query = [sql, options]; // I don't know how to write the method, but I think query is just a text for distinguishing each other.
   self.data = [];
-  // if((self.query in base._resultsBuffer)) {
-      self.startLiveQuery(sql, options)
-    // }
-    self.runFirstQuery(function() {
-      // self._setRecords(base._resultsBuffer[self.query]);
-    });
+  self.startLiveQuery(sql, options)
+  self.runFirstQuery();
 }
 
 util.inherits(LiveOrientoSelect, EventEmitter);
@@ -72,51 +68,6 @@ LiveOrientoSelect.prototype._setRecords = function(records) {
     self.emit('added', value, index);
   });
 }
-
-/*
- * @method
- * @name _setRecords
- * @description :
- *   1. "records" is the result of a select; ? an array of objects ?
- *   2. we set latest records into self.data;
- *   3. we emit every event to ?;
- *
- */
-// LiveOrientoSelect.prototype._setRecords = function(records) {
-//   var self = this;
-//   self.emit('update', records);
-
-//   if(!self.base.settings.skipDiff) {
-//     var diffEvent = function(){
-//       self.emit.apply(self, arguments);
-//     }
-
-//     records.forEach(function(record, index) {
-//       record['@rid'] = exctractRID(record);
-      
-//       if(self.data.length - 1 < index){
-//         diffEvent('added', record.value, index);
-
-//         self.data[index] = record.value;
-
-
-//       } else if(JSON.stringify(self.data[index]) !== JSON.stringify(record)) {
-//         diffEvent('changed', self.data[index], record.value, index);
-//         self.data[index] = record.value;
-//       }
-//     });
-
-//     if(self.data.length > records.length) {
-//       for(var i = self.data.length - 1; i >= records.length; i--) {
-//         diffEvent('removed', self.data[i], i);
-
-//       }
-//       self.data.splice(records.length, self.data.length - records.length);
-//     }
-//   }
-
-//   self.lastUpdate = Date.now();
-// };
 
 function exctractRID(updateData) {
     return '#' + updateData.cluster + ":" + updateData.position; 

@@ -61,35 +61,7 @@ LiveOrientDB.prototype.select = function(sql, options) {
  */
 LiveOrientDB.prototype.execute = function(sql, options) {
   var self = this;
-  var changes = self.db.exec(sql, options, this);
-
-  // var eventResults = {};
-  
-  // function _nextSelect(index) {
-  //   var select;
-  //   if(index < self._select.length) {
-  //     select = self._select[index];
-  //     if(select.matchRecordChange(changes)){
-  //       if(select.query in eventResults){
-
-
-  //         select._setRecords(eventResults[select.query]);
-  //         _nextSelect(index + 1);
-  //       } else {
-  //         select.update(function(error, records) {
-  //           if(error === undefined){
-  //             eventResults[select.query] = records;
-  //           }
-  //           _nextSelect(index + 1);
-  //         });
-  //       }
-  //     } else {
-  //       _nextSelect(index + 1);
-  //     }
-  //   }
-  // };
-
-  // _nextSelect(0);
+  self.db.exec(sql, options, this);
 };
 
 LiveOrientDB.prototype.end = function(){
