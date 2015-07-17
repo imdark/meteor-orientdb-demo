@@ -61,6 +61,7 @@ LiveOrientDB.prototype.select = function(sql, options) {
  */
 LiveOrientDB.prototype.execute = function(sql, options) {
   var self = this;
+  console.log(sql, options);
   self.db.exec(sql, options, this);
 };
 

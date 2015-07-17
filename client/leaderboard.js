@@ -1,8 +1,8 @@
 Meteor.methods({
   'incScore': function(id, amount){
     var originalIndex;
-    oplayers.forEach(function(player, index){
-      if(player.id === id){
+    oplayers.forEach(function(player, index) {
+      if(player.id === id) {
         originalIndex = index;
         oplayers[index].score += amount;
         oplayers.changed();
@@ -28,7 +28,7 @@ Template.leaderboard.helpers({
   selectedName: function () {
     oplayers.depend();
     var player = oplayers.filter(function(player){
-      return player.name === Session.get("selectedPlayer").name;
+      return player['@rid'] === Session.get("selectedPlayer")['@rid'];
     });
     return player.length && player[0].name;
   }
@@ -37,11 +37,11 @@ Template.leaderboard.helpers({
 Template.leaderboard.events({
   'click .inc': function () {
     var player = oplayers.filter(function(player){
-      return player.name === Session.get("selectedPlayer").name;
+      return player['@rid'] === Session.get("selectedPlayer")['@rid'];
     })[0];
 
     player.score += 5
-    Meteor.call('incScore', {name: player.name, score: player.score});
+    Meteor.call('incScore', { rid: player['@rid'], score: player.score });
   }
 });
 

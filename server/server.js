@@ -15,7 +15,7 @@ Meteor.publish('test', function() {
 
 Meteor.methods({
   'incScore': function(options) {
-      orientdb.execute('update players set score=:score where name=:name', { params:options });
+      orientdb.execute('update players set score=:score where @rid=:rid', { params:options });
     }
   });
 //     },
