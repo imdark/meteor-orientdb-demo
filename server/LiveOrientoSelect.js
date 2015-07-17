@@ -39,38 +39,21 @@ function LiveOrientoSelect(sql, options, base) {
 
 util.inherits(LiveOrientoSelect, EventEmitter);
 
-/*
- *
- * @method
- * @name matchRecordChange
- * @description :
- *   1. changes is returned by triggers;
- *   2. changes should contain the information of the database and the class where the records come from;
- *   3. make sure whether the changes affect the select instance in _select;
- *
- */
-LiveOrientoSelect.prototype.matchRecordChange = function(changes) {
-  var self = this;
-  if(changes._boundTo.name == self.base.db.name && 'play' == self.table ){
-    return true;
-  } else {
-    return false;
-  }
-};
+function exctractRID(updateData) {
+    return '#' + updateData.cluster + ":" + updateData.position; 
+}
 
 LiveOrientoSelect.prototype._setRecords = function(records) {
   var self = this;
-  self.data = records.map(function(record){
-    return record.value
+  self.data = records.map(function(record) {
+    var recordValue = record.value;
+    recordValue['@rid'] = exctractRID(record);
+    return recordValue;
   });
 
   self.data.forEach(function(value, index) {
     self.emit('added', value, index);
   });
-}
-
-function exctractRID(updateData) {
-    return '#' + updateData.cluster + ":" + updateData.position; 
 }
 
 LiveOrientoSelect.prototype.startLiveQuery = function(query) {
@@ -82,7 +65,7 @@ LiveOrientoSelect.prototype.startLiveQuery = function(query) {
      //new record inserted in the database,
      var newRecord = data.content;
      newRecord['@rid'] = exctractRID(data);
-     if(!self.data.some(function(record) {return record.name == newRecord.name})) {
+     if(!self.data.some(function(record) {return record['@rid'] == newRecord['@rid']})) {
       self.data.push(newRecord);
       self.emit('added', newRecord, self.data.length - 1);
     }
@@ -91,7 +74,7 @@ LiveOrientoSelect.prototype.startLiveQuery = function(query) {
       //record just deleted, receiving the old content
       var removedRecord = data.content;
       removedRecord['@rid'] = exctractRID(data);
-      var oldRecord = self.data.filter(function(record) {return record.name == removedRecord.name} )[0]
+      var oldRecord = self.data.filter(function(record) { return record['@rid'] == removedRecord['@rid'] } )[0]
       var oldIndex = self.data.indexOf(oldRecord);
 
       self.emit('removed', oldRecord, oldIndex);
@@ -100,7 +83,7 @@ LiveOrientoSelect.prototype.startLiveQuery = function(query) {
       //record updated, receiving the new content
       var updatedRecord = data.content;
       updatedRecord['@rid'] = exctractRID(data);
-      var oldRecord = self.data.filter(function(record) {return record.name == updatedRecord.name} )[0]
+      var oldRecord = self.data.filter(function(record) { return record['@rid'] == updatedRecord['@rid'] } )[0]
 
       if(JSON.stringify(updatedRecord) !== JSON.stringify(oldRecord)) {
         var oldIndex = self.data.indexOf(oldRecord);
