@@ -90,8 +90,6 @@ LiveOrientDB.prototype.execute = function(sql, options) {
   // };
 
   // _nextSelect(0);
-
-  return console.log('LiveOrientDB.prototype.execute', sql);
 };
 
 LiveOrientDB.prototype.end = function(){

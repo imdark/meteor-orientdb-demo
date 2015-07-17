@@ -63,15 +63,14 @@ LiveOrientoSelect.prototype.matchRecordChange = function(changes) {
 };
 
 LiveOrientoSelect.prototype._setRecords = function(records) {
-  console.log('_setRecords', records)
-    var self = this;
-    self.data = records.map(function(record){
-      return record.value
-    });
+  var self = this;
+  self.data = records.map(function(record){
+    return record.value
+  });
 
-    self.data.forEach(function(value, index) {
-      self.emit('added', value, index);
-    });
+  self.data.forEach(function(value, index) {
+    self.emit('added', value, index);
+  });
 }
 
 /*
@@ -177,7 +176,6 @@ LiveOrientoSelect.prototype.runFirstQuery = function(callback) {
   
   self.base.db.exec(self.sql, self.options).then(function(response) {
     var records = response.results[0].content;
-    console.log('.runFirstQuery', response);
     self._setRecords(records);
     callback && callback.call(self, undefined, records);;
   });

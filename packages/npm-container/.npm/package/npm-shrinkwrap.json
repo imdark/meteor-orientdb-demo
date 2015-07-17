@@ -1,10 +1,10 @@
 {
   "dependencies": {
     "orientjs": {
-      "version": "2.0.0",
+      "version": "https://github.com/imdark/orientjs/archive/fd27c62a38f77dbf62ff7ddb3dfecaef01b8b8ba.tar.gz",
       "dependencies": {
         "bluebird": {
-          "version": "2.9.32"
+          "version": "2.9.34"
         },
         "fast.js": {
           "version": "0.1.1"
