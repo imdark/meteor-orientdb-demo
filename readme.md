@@ -51,6 +51,8 @@ var orientdb = new Meteor.LiveOrientDB({
 * [https://github.com/orientechnologies/orientdb-docs/blob/master/Live-Query.md](documentation explaining the use of live query in orientDB docs)
 
 ## version notes
+- 21/7/2015 - I refactored out all the basic orient logic into the external package
+
 - 17/7/2015 - I believe I have solved the connection issues in orientjs, made a pull request at https://github.com/orientechnologies/orientjs/pull/43.
 For now it is solved in my own package, from my tests it works perfectly meaning both the connection issues I have noticed seems to be resolved now.
 Also been cleaning the select code, looks much better now.

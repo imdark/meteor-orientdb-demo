@@ -1,4 +1,3 @@
-
 var orientdb = new Meteor.LiveOrientDB({
   host: 'localhost',
   port: '2424',
