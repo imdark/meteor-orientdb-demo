@@ -19,7 +19,6 @@ Meteor.methods({
   }
 });
 
-
 Template.leaderboard.helpers({
   oplayers: function () {
 
@@ -28,7 +27,7 @@ Template.leaderboard.helpers({
   selectedName: function () {
     oplayers.depend();
     var player = oplayers.filter(function(player){
-      return player['@rid'] === Session.get("selectedPlayer")['@rid'];
+      return Session.get("selectedPlayer") !== undefined && player['@rid'] === Session.get("selectedPlayer")['@rid'];
     });
     return player.length && player[0].name;
   }
@@ -47,7 +46,12 @@ Template.leaderboard.events({
 
 Template.player.helpers({
   selected: function () {
-    return Session.equals("selectedPlayer", this) ? "selected" : '';
+    // ReactiveDict.equals: value must be scalar
+    // http://stackoverflow.com/questions/25739551/why-doesnt-reactivevar-have-a-equals-method
+    if (Session.get('selectedPlayer') == undefined){
+      return false;
+    }
+    return Session.get('selectedPlayer')['@rid'] === this['@rid'];
   }
 });
 
